@@ -41,6 +41,7 @@ byte mac[] = {
 
 const char * host = "http://www.google.com";
 EthernetClient client;
+String currentLine = ""; 
 
 void setup() {
 
@@ -114,7 +115,30 @@ void loop() {
     dns.begin(Ethernet.dnsServerIP());
     Serial.println(dns.getHostByName("www.google.com", addr));
     Serial.println(addr);
-    // Serial.println(client.connect(addr, 80));
+    Serial.println(client.connect(addr, 80));
+    client.println("GET HTTP/1.1");
+    client.println("HOST: www.google.com");
+    client.println("Connection: close");
+    client.println("");
+    if (client.connected()) {
+        if (client.available()) {
+            // read incoming bytes:
+            char inChar = client.read();
+
+            // add incoming byte to end of line:
+            currentLine += inChar;
+
+            // if you get a newline, clear the line:
+            if (inChar == '\n') {
+                Serial.println(currentLine);
+                currentLine = "";
+            }
+
+            client.stop();
+        }
+    }
+
+
     
 }
 
