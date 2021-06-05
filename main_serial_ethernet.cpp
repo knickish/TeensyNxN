@@ -36,119 +36,90 @@
 // Enter a MAC address for your controller below.
 // Newer Ethernet shields have a MAC address printed on a sticker on the shield
 byte mac[] = {
-  0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02
+    0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02
 };
 
 const char * host = "http://www.google.com";
 EthernetClient client;
-String currentLine = ""; 
+unsigned long byteCount = 0;
 
 void setup() {
 
-  Serial.begin(115200);
-  while (!Serial) {
-	; // wait for serial port to connect. Needed for native USB port only
-  }
-  //pinMode(0, OUTPUT);
+    Serial.begin(115200);
+    while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+    }
+    //pinMode(0, OUTPUT);
 
-  // start the Ethernet connection:
-  Serial.println("Initialize Ethernet with DHCP:");
-  if (Ethernet.begin(mac) == 0) {
-	Serial.print("Failed to configure Ethernet using DHCP");
-    Serial.print(" ");
-	Serial.print(int(Ethernet.linkStatus()));
-    Serial.print(" ");
-    Serial.println(int(Ethernet.hardwareStatus()));
-	if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-	  Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
-	} else if (Ethernet.linkStatus() == LinkOFF) {
-	  Serial.println("Ethernet cable is not connected.");
-	}
-	// no point in carrying on, so do nothing forevermore:
-	while (true) {
-	  delay(1);
+    // start the Ethernet connection:
+    Serial.println("Initialize Ethernet with DHCP:");
+    if (Ethernet.begin(mac) == 0) {
+        Serial.print("Failed to configure Ethernet using DHCP");
+        Serial.print(" ");
+        Serial.print(int(Ethernet.linkStatus()));
+        Serial.print(" ");
+        Serial.println(int(Ethernet.hardwareStatus()));
+        if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+            Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
+        } else if (Ethernet.linkStatus() == LinkOFF) {
+            Serial.println("Ethernet cable is not connected.");
+        }
+        // no point in carrying on, so do nothing forevermore:
+        while (true) {
+            delay(1);
 
-	}
-  }
+        }
+    }
+    delay(1000);
     // print your local IP address:
     Serial.print("My IP address: ");
     Serial.println(Ethernet.localIP());
     Serial.println(Ethernet.dnsServerIP() );
     Serial.println(Ethernet.gatewayIP());
-    
-}
 
-void loop() {
-    switch (Ethernet.maintain()) {
-        case 1:
-        //renewed fail
-        Serial.println("Error: renewed fail");
-        break;
-
-        case 2:
-        //renewed success
-        Serial.println("Renewed success");
-        //print your local IP address:
-        Serial.print("My IP address: ");
-        Serial.println(Ethernet.localIP());
-        break;
-
-        case 3:
-        //rebind fail
-        Serial.println("Error: rebind fail");
-        break;
-
-        case 4:
-        //rebind success
-        Serial.println("Rebind success");
-        //print your local IP address:
-        Serial.print("My IP address: ");
-        Serial.println(Ethernet.localIP());
-        break;
-
-        default:
-        //nothing happened
-        break;
-    }
     IPAddress addr;
     DNSClient dns;
     dns.begin(Ethernet.dnsServerIP());
-    Serial.println(dns.getHostByName("www.google.com", addr));
+    Serial.println(dns.getHostByName("google.com", addr));
     Serial.println(addr);
-    Serial.println(client.connect(addr, 80));
-    client.println("GET HTTP/1.1");
-    client.println("HOST: www.google.com");
-    client.println("Connection: close");
-    client.println("");
-    if (client.connected()) {
-        if (client.available()) {
-            // read incoming bytes:
-            char inChar = client.read();
-
-            // add incoming byte to end of line:
-            currentLine += inChar;
-
-            // if you get a newline, clear the line:
-            if (inChar == '\n') {
-                Serial.println(currentLine);
-                currentLine = "";
-            }
-
-            client.stop();
-        }
+    if (client.connect(addr, 80)) {
+        Serial.print("connected to ");
+        Serial.println(client.remoteIP());
+        // Make a HTTP request:
+        client.println("GET /search?q=arduino HTTP/1.1");
+        client.println("Host: www.google.com");
+        client.println("Connection: close");
+        client.println();
+    } else {
+        // if you didn't get a connection to the server:
+        Serial.println("connection failed");
     }
+        
+}
 
+void loop() {
+    int len = client.available();
+    if (len > 0) {
+            // read incoming bytes:
+        byte buffer[80];
+        if (len > 80) len = 80;
+        client.read(buffer, len);
+        Serial.write(buffer, len); // show in the serial monitor (slows some boards)
 
-    
+        byteCount = byteCount + len;
+    }
+    else{
+        Serial.println("Client not available");
+    }
 }
 
 extern "C" int main(void)
 {
-	setup();
-	while (1) {
-		loop();
-		delay(10000);
-	}
+    setup();
+    while (1) {
+        loop();
+        delay(1000);
+    }
 }
 
 
