@@ -62,3 +62,23 @@ int strncpy(char* dest, char* src, int maxchars)
 	}
 	return copied;
 }
+
+template <typename T, typename S>
+int strcmp_template(T* first, S* second)
+{
+	if(!first || !second)
+		return -1;
+	int index = 0;
+	while ((*(first+index)-*(second+index))==0){
+		index++;
+		if (*(first+index)==0 || *(second+index)==0)
+		{
+			if (*(first+index)==0 && *(second+index)==0)
+				return 0;
+			else 
+				return (int)(*(first+index)-*(second+index));
+				
+		}
+	}
+	return (int)(*(first+index)-*(second+index));
+}
