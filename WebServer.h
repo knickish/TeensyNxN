@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <Ethernet.h>
+#include "WebForms.h"
 
 class APIServer
 {
@@ -11,14 +12,19 @@ class APIServer
     EthernetServer server;
     IPAddress ip;
     EthernetClient curr_client;
+    HTTPHeaderFactory header_factory;
     byte mac[6] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 
     //CONSTRUCTOR
     APIServer(IPAddress ip_arg)
         : server(80)
         , ip(ip_arg) 
+        , header_factory(
+            (HTTPHeaderFactory::ContentTypeFlags) HTTPHeaderFactory::ContentType::TEXT_HTML,
+            HTTPHeaderFactory::ConnectionMode::CLOSE,
+            HTTPHeaderFactory::HTTPResponse::HTTP_200
+            )
     {
-
     }
 
     bool begin()
@@ -65,10 +71,9 @@ class APIServer
                 Serial.write(c);
                 if (c == '\n' && currentLineIsBlank) {
                 // send a standard http response header
-                client.println("HTTP/1.1 200 OK");
-                client.println("Content-Type: text/html");
-                client.println("Connection: close");  // the connection will be closed after completion of the response
-                client.println("Refresh: 5");  // refresh the page automatically every 5 sec
+                Serial.println("\nResponse Header Goes Here");
+                Serial.println(header_factory.get_header());
+                client.println(header_factory.get_header());
                 client.println();
                 client.println("<!DOCTYPE HTML>");
                 client.println("<html>");

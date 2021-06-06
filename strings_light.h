@@ -9,10 +9,11 @@ unsigned stou(char* text_num)
 		if (c >= '0' && c <= '9') {
 			acc = acc * 10 + (c - '0');
 		} else {
-			// Invalid char
-			return acc;
+			break;
+			
 		}
     }
+	return acc;
 }
 
 char* utos(unsigned uint_val)
@@ -52,9 +53,11 @@ char* utos(unsigned uint_val)
 
 int strncpy(char* dest, char* src, int maxchars)
 {
+	if(!dest || !src)
+		return 0;
 	int copied = 0;
-	while (copied<maxchars && dest[copied] && src[copied]){
-		dest[copied] = src[copied];
+	while (copied<maxchars && *(src+copied)){
+		*(dest+copied)= *(src+copied);
 		copied++;
 	}
 	return copied;
