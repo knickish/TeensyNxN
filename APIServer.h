@@ -4,6 +4,7 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include "WebForms.h"
+#include "MatrixMath.h"
 
 
 #define ENDPOINT_COUNT 3
@@ -189,10 +190,10 @@ class APIServer
             client.println();
             Serial.println("<!DOCTYPE HTML>");
             Serial.println("<html>");
-            Serial.print(" <form action=\"/matrix_invert/\" method=\"POST\"><br>");
+            Serial.print(" <form action=\"/matrix_invert/\" method=\"GET\"><br>");
             client.println("<!DOCTYPE HTML>");
             client.println("<html>");
-            client.print(" <form action=\"/matrix_invert/\" method=\"POST\"><br>");
+            client.print(" <form action=\"/matrix_invert/\" method=\"GET\"><br>");
             client.println("<h3>Input Matrix Values</h3><br>");
             for (int i = 0 ; i< matrix_size ; i++)
             {
@@ -226,7 +227,123 @@ class APIServer
 
     void matrix_invert_endpoint()
     {
+        Serial.println("Using Matrix Invert Endpoint");
+        EthernetClient client =  curr_client;
+
+        float float_arr[16] = {0};
+        int float_count = 0;
+
+        const int char_buf_size = 128;
+        char char_buf[char_buf_size+1] = {0};
+        int char_index = 0;
+        
+        while (client.connected()) {
+            char c;
+            bool passed_equal = false;
+            while (client.available()) {
+                c = client.read();
+                if (passed_equal && c && char_index<char_buf_size)
+                {
+                    char_buf[char_index] = c;
+                    char_index++;
+                }
+                if (c=='='){
+                    passed_equal= true;
+                }
+                if (c=='&'||c=='\0'||c=='\n'){
+                    String float_str = String(char_buf);
+                    float_arr[float_count] = float_str.toFloat();
+                    float_count++;
+                    if (c=='\0'||c=='\n')
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        passed_equal = false;
+                        for (char_index = 0; char_index<=char_buf_size;char_index++)
+                        {
+                            char_buf[char_index]=0;
+                        }
+                        char_index = 0;
+                    }
+                    
+                }
+            }
+            int matrix_size = (int) sqrt((float)float_count);
+            if (!((matrix_size*matrix_size)==float_count))
+            {
+                Serial.print("Float count: ");
+                Serial.println(float_count);
+                unsupported_endpoint("Non-square matrix");
+                return;
+            }
+
+            if (matrix_size!=2)
+            {
+                Serial.print("Float count: ");
+                Serial.println(float_count);
+                unsupported_endpoint("Matrices larger than 2x2 not suppoted");
+                return;
+            }
+
+            MatrixMath mat_math = MatrixMath(float_arr, float_count);
+            
+            if (!mat_math.invert_two())
+            {
+                Serial.println(float_arr[0]);
+                unsupported_endpoint("Error in Matrix Inversion");
+                return;
+            }
+            
+            Serial.print("Matrix Size: ");
+            Serial.println(matrix_size);
+
+            client.println(header_factory.get_header());
+            client.println();
+            client.println("<!DOCTYPE HTML>");
+            client.println("<html>");
+            client.println("\t<h3>Inverted Matrix</h3><br>");
+            client.print("\t<table style=\"width:");
+            client.print(matrix_size*50);
+            client.println("px\">");
+            
+            for (int i = 0 ; i< matrix_size ; i++)
+            {
+                for (int j = 0; j<matrix_size; j++)
+                {
+                    client.print("<td>");
+                    client.print(float_arr[(i*matrix_size)+j]);
+                    client.println("</td>");
+                }
+                client.println("</tr>");
+            }
+            client.println("</table>");
+            client.println("</html>");
+            break;
+        }
         return;
+    }
+
+    void unsupported_endpoint(const char* error_str)
+    {
+        Serial.println("Using Unsupported Endpoint");
+        EthernetClient client =  curr_client;
+        while (client.connected()) {
+            while (client.available()) {
+                client.read();
+            }
+            Serial.println(header_factory.get_header());
+            client.println(header_factory.get_header());
+            client.println();
+            client.println("<!DOCTYPE HTML>");
+            client.println("<html>");
+            client.println(" <h3> Unsupported Action: ");
+            client.println(error_str);
+            client.print(" </h3>");
+            client.println("</html>");
+            break;
+        }
     }
 
     void finish_client()
