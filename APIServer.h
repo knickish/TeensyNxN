@@ -236,7 +236,7 @@ class APIServer
         const int char_buf_size = 128;
         char char_buf[char_buf_size+1] = {0};
         int char_index = 0;
-        std::shared_ptr<float[]> float_arr {new float[128]};
+        std::shared_ptr<float> float_arr (new float[128], [](const float* arr){delete[] arr;});
         while (client.connected()) {
             char c;
             bool passed_equal = false;
@@ -252,7 +252,7 @@ class APIServer
                 }
                 if (c=='&'||c=='\0'||c=='\n'){
                     String float_str = String(char_buf);
-                    (*float_arr)[float_count] = float_str.toFloat();
+                    *(float_arr.get()+float_count) = float_str.toFloat();
                     float_count++;
                     if (c=='\0'||c=='\n')
                     {
@@ -291,7 +291,7 @@ class APIServer
             
             if (mat_math.invert())
             {
-                Serial.println((*float_arr)[0]);
+                Serial.println(*(float_arr.get()));
                 unsupported_endpoint("Error in Matrix Inversion");
                 return;
             }
@@ -313,7 +313,7 @@ class APIServer
                 for (int j = 0; j<matrix_size; j++)
                 {
                     client.print("<td>");
-                    client.print((*float_arr)[(i*matrix_size)+j]);
+                    client.print((float)(*(float_arr.get()+(i*matrix_size)+j)));
                     client.println("</td>");
                 }
                 client.println("</tr>");
