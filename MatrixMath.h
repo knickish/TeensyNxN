@@ -245,10 +245,6 @@ class MatrixMath
             invert_two();
             return this->vals;
         }
-        for (int i = 0;i<total_size;i++)
-        {
-            Serial.println(*(vals.get()+i));
-        }
         
         fill_identity();
         int half_square = (int)((sqrt((float)total_size))/2);
