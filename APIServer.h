@@ -183,8 +183,6 @@ class APIServer
             Serial.println(&char_buf[0]);
             Serial.print("Matrix Size: ");
             Serial.println(matrix_size);
-            if (matrix_size>4)
-                matrix_size = 4;
             Serial.println(header_factory.get_header());
             client.println(header_factory.get_header());
             client.println();
@@ -289,7 +287,11 @@ class APIServer
 
             MatrixMath mat_math = MatrixMath(float_arr, float_count);
             
-            if (mat_math.invert())
+            try
+            {
+                float_arr = mat_math.invert();
+            }
+            catch (...)
             {
                 Serial.println(*(float_arr.get()));
                 unsupported_endpoint("Error in Matrix Inversion");
@@ -313,7 +315,7 @@ class APIServer
                 for (int j = 0; j<matrix_size; j++)
                 {
                     client.print("<td>");
-                    client.print((float)(*(float_arr.get()+(i*matrix_size)+j)));
+                    client.print(*(float_arr.get()+(i*matrix_size)+j));
                     client.println("</td>");
                 }
                 client.println("</tr>");

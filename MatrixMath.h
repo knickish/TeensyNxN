@@ -30,8 +30,8 @@ class MatrixMath
             {
                 for(int k = 0;k<square;k++)
                 {
-                    a_list[k] = *vals_l+i*square+k;
-                    b_list[k] = (*vals_r)+(k*square+j);
+                    a_list[k] = *(vals_l.get()+i*square+k);
+                    b_list[k] = *(vals_r.get()+(k*square+j));
                 }
                 for(int k = 0;k<square;k++)
                 {
@@ -57,7 +57,7 @@ class MatrixMath
         {
             for (int j = 0; j<square; j++)
             {
-                *(ret.get()+i*square+j) = ((*vals_l)+(i*square+j)) + ((*vals_r)+(i*square+j));
+                *(ret.get()+i*square+j) = *(vals_l.get()+(i*square+j)) + *(vals_r.get()+(i*square+j));
             }
         }
         return ret;
@@ -72,7 +72,7 @@ class MatrixMath
         {
             for (int j = 0; j<square; j++)
             {
-                *(ret.get()+i*square+j) = ((*vals_l)+(i*square+j)) - ((*vals_r)+(i*square+j));
+                *(ret.get()+i*square+j) = *(vals_l.get()+(i*square+j)) - *(vals_r.get()+(i*square+j));
             }
         }
         return ret;
@@ -83,7 +83,7 @@ class MatrixMath
         std::shared_ptr<float> ret (new float[len], [](const float* arr){delete[] arr;});
         for (int i = 0; i<len;i++)
         {
-            *(ret.get()+i) = -*(vals.get()+i);
+            *(ret.get()+i) = -(*(vals.get()+i));
         }
         return ret;
     }
@@ -245,6 +245,11 @@ class MatrixMath
             invert_two();
             return this->vals;
         }
+        for (int i = 0;i<total_size;i++)
+        {
+            Serial.println(*(vals.get()+i));
+        }
+        
         fill_identity();
         int half_square = (int)((sqrt((float)total_size))/2);
         int quarter_count = total_size/4;
