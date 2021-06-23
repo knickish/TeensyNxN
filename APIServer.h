@@ -230,13 +230,13 @@ class APIServer
         Serial.println("Using Matrix Invert Endpoint");
         EthernetClient client =  curr_client;
 
-        float float_arr[16] = {0};
+        
         int float_count = 0;
 
         const int char_buf_size = 128;
         char char_buf[char_buf_size+1] = {0};
         int char_index = 0;
-        
+        std::shared_ptr<float[]> float_arr {new float[128]};
         while (client.connected()) {
             char c;
             bool passed_equal = false;
@@ -252,7 +252,7 @@ class APIServer
                 }
                 if (c=='&'||c=='\0'||c=='\n'){
                     String float_str = String(char_buf);
-                    float_arr[float_count] = float_str.toFloat();
+                    (*float_arr)[float_count] = float_str.toFloat();
                     float_count++;
                     if (c=='\0'||c=='\n')
                     {
@@ -279,19 +279,19 @@ class APIServer
                 return;
             }
 
-            if (matrix_size!=2)
-            {
-                Serial.print("Float count: ");
-                Serial.println(float_count);
-                unsupported_endpoint("Matrices larger than 2x2 not suppoted");
-                return;
-            }
+            // if (matrix_size!=2)
+            // {
+            //     Serial.print("Float count: ");
+            //     Serial.println(float_count);
+            //     unsupported_endpoint("Matrices larger than 2x2 not suppoted");
+            //     return;
+            // }
 
             MatrixMath mat_math = MatrixMath(float_arr, float_count);
             
-            if (!mat_math.invert_two())
+            if (mat_math.invert())
             {
-                Serial.println(float_arr[0]);
+                Serial.println((*float_arr)[0]);
                 unsupported_endpoint("Error in Matrix Inversion");
                 return;
             }
@@ -313,7 +313,7 @@ class APIServer
                 for (int j = 0; j<matrix_size; j++)
                 {
                     client.print("<td>");
-                    client.print(float_arr[(i*matrix_size)+j]);
+                    client.print((*float_arr)[(i*matrix_size)+j]);
                     client.println("</td>");
                 }
                 client.println("</tr>");
