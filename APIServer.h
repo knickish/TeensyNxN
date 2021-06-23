@@ -234,7 +234,7 @@ class APIServer
         const int char_buf_size = 128;
         char char_buf[char_buf_size+1] = {0};
         int char_index = 0;
-        std::shared_ptr<float> float_arr (new float[128]{0}, [](const float* arr){delete[] arr;});
+        std::shared_ptr<float> float_arr (new float[256]{0}, [](const float* arr){delete[] arr;});
         while (client.connected()) {
             char c;
             bool passed_equal = false;

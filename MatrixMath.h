@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <memory>
 
+
 class MatrixMath
 {
     public:
@@ -120,12 +121,12 @@ class MatrixMath
     bool fill_identity()
     {
         
-        uint16_t base = 2;
+        uint16_t base = 4;
         uint8_t power = 1;
         while (base<original_size)
         {
             power+=1;
-            base*=2;
+            base*=4;
         }
         uint16_t new_square_size = (int) sqrt((float)base);
         uint16_t old_square_size = (int) sqrt((float)original_size);
@@ -169,12 +170,12 @@ class MatrixMath
     int trim_identity(int size)
     {
         
-        uint16_t base = 2;
+        uint16_t base = 4;
         uint8_t power = 1;
         while (base<size)
         {
             power+=1;
-            base*=2;
+            base*=4;
         }
         uint16_t new_square_size = (int) sqrt((float)size);
         uint16_t old_square_size = (int) sqrt((float)base);
@@ -238,8 +239,6 @@ class MatrixMath
 
     std::shared_ptr<float> invert()
     {
-
-        
         if (this->total_size==4)
         {
             invert_two();
@@ -247,6 +246,7 @@ class MatrixMath
         }
         
         fill_identity();
+
         int half_square = (int)((sqrt((float)total_size))/2);
         int quarter_count = total_size/4;
         //fill and invert e
